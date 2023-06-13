@@ -477,6 +477,9 @@ impl Drop for EJDB {
     }
 }
 
+unsafe impl Send for EJDB {}
+unsafe impl Sync for EJDB {}
+
 impl EJDB {
     fn err_to_str(mut rc: ejdb2_sys::iwrc) -> &'static str {
         let error_code = unsafe { ejdb2_sys::iwrc_strip_errno(&mut rc) };

@@ -18,13 +18,13 @@ fn main() {
         "nested" : { "test" : "str"}
     });
 
-    let id = db.put_new("test", &data).unwrap();
+    db.put("test", &data, 1).unwrap();
 
     let meta: serde_json::Value = db.info().unwrap();
 
     println!("db meta {}", meta);
 
-    let result: String = db.get("test", id).unwrap();
+    let result: String = db.get("test", 1).unwrap();
 
     println!("get {}, {}", 1, result);
 
