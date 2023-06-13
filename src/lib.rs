@@ -94,8 +94,6 @@ pub mod ejdbquery;
 pub use ejdbquery::{SetPlaceholder, EJDBSerializable, EJDBQuery};
 pub use ejdb::EJDB;
 
-use serde_json::json;
-
 
 #[cfg(test)]
 mod tests {

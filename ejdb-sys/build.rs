@@ -12,7 +12,7 @@ fn main() {
 
     let dst = Config::new("ejdb-upstream")
         .cflag("-w")
-        .profile("Debug")
+        .profile("Release")
         .define("BUILD_EXAMPLES", "OFF")
         .define("BUILD_SHARED_LIBS", "OFF")
         .define("ENABLE_HTTP", "OFF")
@@ -24,12 +24,23 @@ fn main() {
         "cargo:rustc-link-search=native={}",
         dst.join("lib").display()
     );
+
+    println!(
+        "cargo:rustc-link-search=native={}",
+        dst.join("build/lib").display()
+    );
+
     println!(
         "cargo:rustc-link-search=native={}",
         dst.join("lib64").display()
     );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        dst.join("build/lib64").display()
+    );
+
     println!("cargo:rustc-link-lib=static=ejdb2-2");
-    println!("cargo:rustc-link-lib=static=facilio-1");
+    //println!("cargo:rustc-link-lib=static=facilio-1");
     println!("cargo:rustc-link-lib=static=iowow-1");
 
     println!("cargo:include={}",dst.join("include/ejdb2").display());
@@ -39,6 +50,7 @@ fn main() {
         .header(dst.join("include/ejdb2/ejdb2.h").as_path().to_str().unwrap())
         // Hide duplicated types
         .clang_arg( format!("-I{}", dst.join("include").as_path().to_str().unwrap()) )
+        .clang_arg( format!("-I{}", dst.join("build/include").as_path().to_str().unwrap()) )
         .blacklist_item("FP_NAN")
         .blacklist_item("FP_INFINITE")
         .blacklist_item("FP_ZERO")

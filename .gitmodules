@@ -1,3 +1,6 @@
 [submodule "rust/ejdb-sys/ejdb-upstream"]
 	path = rust/ejdb-sys/ejdb-upstream
 	url = https://github.com/Softmotions/ejdb.git
+[submodule "ejdb-sys/ejdb-upstream"]
+	path = ejdb-sys/ejdb-upstream
+	url = https://github.com/Softmotions/ejdb.git

@@ -1,5 +1,5 @@
 [package]
-name = "ejdb2"
+name = "ejdb2rs"
 version = "0.0.6"
 authors = ["Shi Yan <billconan@gmail.com>"]
 description = "Binding for EJDB2, a single file embedded no-sql database"
@@ -8,7 +8,6 @@ documentation = "https://github.com/shi-yan/ejdb2rs"
 readme = "README.md"
 keywords = ["ejdb2", "database", "json", "bson", "ffi"]
 license = "MIT"
-
 [badges]
 maintenance = { status = "experimental" }
 
@@ -16,6 +15,5 @@ maintenance = { status = "experimental" }
 name = "ejdb2"
 
 [dependencies]
-ejdb2-sys = "2.61.0"
+ejdb2-sys = {path="./ejdb-sys"}
 serde_json = "1.0"
-

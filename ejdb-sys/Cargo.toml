@@ -17,5 +17,5 @@ bindgen = "0.59"
 [dependencies]
 libc = "0.2"
 
- [lib]
- doctest = false
+[lib]
+doctest = false

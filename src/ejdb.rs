@@ -566,6 +566,8 @@ impl EJDB {
                 max_body_size: 0,
                 bind: std::ptr::null_mut(),
                 read_anon: false,
+                ssl_private_key: std::ptr::null_mut(),
+                ssl_certs: std::ptr::null_mut()
             },
             no_wal: false,
             sort_buffer_sz: 0,
