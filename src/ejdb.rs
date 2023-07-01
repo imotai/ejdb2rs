@@ -9,9 +9,37 @@ pub struct EJDB {
 }
 
 impl EJDBSerializable<String> for &str {
+    fn from_jbn(jbn: ejdb2_sys::JBL_NODE) -> Result<String, ejdb2_sys::iwrc> {
+        let xstr = unsafe { ejdb2_sys::iwxstr_new() };
+        let rc5 = unsafe {
+            ejdb2_sys::jbn_as_json(
+                jbn,
+                Some(ejdb2_sys::jbl_xstr_json_printer),
+                xstr as *mut ::std::os::raw::c_void,
+                1,
+            )
+        };
+        if rc5 != 0 {
+            println!("failed to convert json to str {}", rc5);
+            unsafe {
+                ejdb2_sys::iwxstr_destroy(xstr);
+            };
+            return Err(rc5);
+        }
+        let str2 = unsafe {
+            std::ffi::CStr::from_ptr(ejdb2_sys::iwxstr_ptr(xstr))
+                .to_str()
+                .unwrap()
+        };
+        let result = String::from(str2);
+        unsafe {
+            ejdb2_sys::iwxstr_destroy(xstr);
+        };
+        return Ok(result);
+    }
+
     fn from_jbl(jbl: ejdb2_sys::JBL) -> Result<String, ejdb2_sys::iwrc> {
         let xstr = unsafe { ejdb2_sys::iwxstr_new() };
-
         let rc5 = unsafe {
             ejdb2_sys::jbl_as_json(
                 jbl,
@@ -58,9 +86,36 @@ impl EJDBSerializable<String> for &str {
 }
 
 impl EJDBSerializable<String> for String {
+    fn from_jbn(jbn: ejdb2_sys::JBL_NODE) -> Result<String, ejdb2_sys::iwrc> {
+        let xstr = unsafe { ejdb2_sys::iwxstr_new() };
+        let rc5 = unsafe {
+            ejdb2_sys::jbn_as_json(
+                jbn,
+                Some(ejdb2_sys::jbl_xstr_json_printer),
+                xstr as *mut ::std::os::raw::c_void,
+                1,
+            )
+        };
+        if rc5 != 0 {
+            println!("failed to convert json to str {}", rc5);
+            unsafe {
+                ejdb2_sys::iwxstr_destroy(xstr);
+            };
+            return Err(rc5);
+        }
+        let str2 = unsafe {
+            std::ffi::CStr::from_ptr(ejdb2_sys::iwxstr_ptr(xstr))
+                .to_str()
+                .unwrap()
+        };
+        let result = String::from(str2);
+        unsafe {
+            ejdb2_sys::iwxstr_destroy(xstr);
+        };
+        return Ok(result);
+    }
     fn from_jbl(jbl: ejdb2_sys::JBL) -> Result<String, ejdb2_sys::iwrc> {
         let xstr = unsafe { ejdb2_sys::iwxstr_new() };
-
         let rc5 = unsafe {
             ejdb2_sys::jbl_as_json(
                 jbl,
@@ -436,9 +491,12 @@ impl EJDBSerializerHelper<serde_json::Value> for serde_json::Value {
 }
 
 impl EJDBSerializable<serde_json::Value> for serde_json::Value {
+    fn from_jbn(jbn: ejdb2_sys::JBL_NODE) -> Result<serde_json::Value, ejdb2_sys::iwrc> {
+            return Err(0);
+    }
+
     fn from_jbl(jbl: ejdb2_sys::JBL) -> Result<serde_json::Value, ejdb2_sys::iwrc> {
         let jbl_type = unsafe { ejdb2_sys::jbl_type(jbl) };
-
         match jbl_type {
             ejdb2_sys::jbl_type_t_JBV_OBJECT => {
                 let map = <serde_json::Value>::from_jbl_object(jbl).unwrap();
@@ -835,7 +893,6 @@ impl EJDB {
             println!("failed to backup {}", rc);
             return Err(rc);
         }
-
         return Ok(ts);
     }
 
@@ -843,9 +900,8 @@ impl EJDB {
         &self,
         q: &EJDBQuery,
         f: &mut Vec<(i64, O)>,
-    ) -> Result<(), ejdb2_sys::iwrc> {
+    ) -> Result<i64, ejdb2_sys::iwrc> {
         let callback_ptr: *mut std::ffi::c_void = f as *mut _ as *mut std::ffi::c_void;
-
         let mut ux = ejdb2_sys::EJDB_EXEC {
             db: self.db,
             cnt: 0,
@@ -857,15 +913,12 @@ impl EJDB {
             visitor: Some(document_visitor::<O>),
             q: q.q,
         };
-
         let rc3 = unsafe { ejdb2_sys::ejdb_exec(&mut ux) };
-        println!("after exec");
         if rc3 != 0 {
             println!("unable to exec {}", rc3);
             return Err(rc3);
         }
-
-        Ok(())
+        Ok(ux.cnt)
     }
 }
 
@@ -874,14 +927,24 @@ unsafe extern "C" fn document_visitor<O: EJDBSerializable<O>>(
     doc: ejdb2_sys::EJDB_DOC,
     step: *mut i64,
 ) -> ejdb2_sys::iwrc {
-    let result: O = match <O>::from_jbl((*doc).raw) {
-        Result::Ok(val) => val,
-        Result::Err(err) => {
-            return err;
-        }
-    };
-
-    let data: &mut Vec<(i64, O)> = &mut *((*ctx).opaque as *mut Vec<(i64, O)>);
-    data.push(((*doc).id, result));
+    if (*doc).node != std::ptr::null_mut() {
+        let result: O = match <O>::from_jbn((*doc).node) {
+            Result::Ok(val) => val,
+            Result::Err(err) => {
+                return err;
+            }
+        };
+        let data: &mut Vec<(i64, O)> = &mut *((*ctx).opaque as *mut Vec<(i64, O)>);
+        data.push(((*doc).id, result));
+    } else {
+        let result: O = match <O>::from_jbl((*doc).raw) {
+            Result::Ok(val) => val,
+            Result::Err(err) => {
+                return err;
+            }
+        };
+        let data: &mut Vec<(i64, O)> = &mut *((*ctx).opaque as *mut Vec<(i64, O)>);
+        data.push(((*doc).id, result));
+    }
     0
 }

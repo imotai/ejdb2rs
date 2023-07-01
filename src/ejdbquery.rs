@@ -2,7 +2,7 @@ extern crate ejdb2_sys;
 
 pub trait EJDBSerializable<T> {
     fn from_jbl(jbl: ejdb2_sys::JBL) -> Result<T, ejdb2_sys::iwrc>;
-
+    fn from_jbn(jbn: ejdb2_sys::JBL_NODE) -> Result<T, ejdb2_sys::iwrc>;
     fn to_jbl(&self) -> Result<ejdb2_sys::JBL, ejdb2_sys::iwrc>;
 }
 
@@ -32,7 +32,6 @@ impl EJDBQuery {
         let rc = unsafe {
             ejdb2_sys::jql_create(&mut self.q, collection_str.as_ptr(), query_str.as_ptr())
         };
-
         if rc != 0 {
             unsafe { ejdb2_sys::jql_destroy(&mut self.q) };
             self.q = std::ptr::null_mut();
@@ -50,6 +49,11 @@ impl EJDBQuery {
         }
 
         return Ok(out);
+    }
+
+    pub fn has_aggregate_count(&self) -> bool {
+        let result: bool = unsafe { ejdb2_sys::jql_has_aggregate_count(self.q) };
+        result
     }
 
     pub fn set_placeholder_json(
@@ -178,11 +182,9 @@ impl SetPlaceholder<&str> for EJDBQuery {
     ) -> Result<(), ejdb2_sys::iwrc> {
         let placeholder_str = std::ffi::CString::new(placeholder).unwrap();
         let value_str = std::ffi::CString::new(val).unwrap();
-
         let rc = unsafe {
             ejdb2_sys::jql_set_str(self.q, placeholder_str.as_ptr(), index, value_str.as_ptr())
         };
-
         if rc != 0 {
             println!("failed to set placeholder {}", placeholder);
             return Err(rc);

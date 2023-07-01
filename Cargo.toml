@@ -17,3 +17,4 @@ name = "ejdb2"
 [dependencies]
 ejdb2-sys = {path="./ejdb-sys"}
 serde_json = "1.0"
+bson = "2.5.0"
